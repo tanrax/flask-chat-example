@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chat</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bulma.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+
+<body>
+	<div id="app" class="container">
+	    <section class="messages">
+	        <div v-for="message in messages" class="box">
+	            <article class="media">
+	                <div class="media-content">
+	                    <div class="content">
+	                    	<p><strong>@[[ message.username ]]</strong></p>
+	                        <p>[[ message.text ]]</p>
+	                    </div>
+	                </div>
+	            </article>
+	        </div>
+	    </section>
+	    <section class="new-message">
+	        <div class="field has-addons">
+	            <div class="control is-expanded">
+	                <input v-model="newMessage" @keypress.enter="sendMessage" class="input" type="text" placeholder="Escribe un mensaje...">
+	            </div>
+	            <div class="control">
+	                <button @click="sendMessage" class="button is-info">Enviar</button>
+	            </div>
+	        </div>
+	    </section>
+    </div>
+    <script src="{{ url_for('static', filename='js/vendor/socket.io.slim.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/vendor/vue.min.js') }}"></script>
+    <script>
+	    var socket = io.connect('{{ domain }}');
+	    var app = new Vue({
+		    el: "#app",
+		    delimiters: ['[[', ']]'],
+		    data: {
+		    	channel: {{ channel }},
+		    	username: '{{ username }}',
+		    	messages: [
+		    	{% for message in chat %}
+		    		{
+		    			username: '{{ message.username }}',
+		    			text: '{{ message.text }}'
+		    		}{% if not loop.last %},{% endif %}
+		    	{% endfor %}
+		    	],
+		    	newMessage: ''
+		    },
+		    methods: {
+		    	sendMessage: () => {
+		    		// Send new message
+					socket.emit('new_message', {
+				    	channel: app.channel,
+				    	username: app.username,
+				    	text: app.newMessage
+				    });
+				    // Clear text
+				    app.$set(app, 'newMessage', '');
+		    	}
+		    }
+		});
+
+		socket.on('connect', function() {
+		    console.log('Connect')
+		});
+
+		socket.on('new_message', function(msg) {
+			// Add new message to HTML
+			let my_messages = app.messages;
+			my_messages.push({
+				username: msg.username,
+				text: msg.text
+			})
+		    app.$set(app, 'messages', my_messages);
+		});
+    </script>
+</body>
+
+</html>
