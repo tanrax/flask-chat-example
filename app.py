@@ -39,7 +39,7 @@ def open_chat(channel, name):
 @socketio.on('new_message')
 def new_message(message):
     # Send message to alls users
-    emit('new_message', {
+    emit('channel-' + str(message['channel']), {
         'username': message['username'],
         'text': message['text']
     },

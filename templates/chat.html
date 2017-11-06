@@ -72,7 +72,7 @@
 		    console.log('Connect')
 		});
 
-		socket.on('new_message', function(msg) {
+		socket.on('channel-' + app.channel, function(msg) {
 			// Add new message to HTML
 			let my_messages = app.messages;
 			my_messages.push({
